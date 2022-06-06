@@ -1,6 +1,6 @@
 from pymongo import MongoClient
 
-URL= "mongodb://localhost:27017"
+URL= "mongodb://mongo:1234@localhost:27017"
 CLIENT= MongoClient(URL)
 DB= CLIENT['commerce']
 COLLECTION= DB['products']
