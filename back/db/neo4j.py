@@ -21,14 +21,14 @@ class Neo4j:
     result= tx.run(query, username= username)
     return result.single()
 
-  def get_by_username(self, username):
+  def get_by_username(self, username:str):
     with self.driver.session() as session:
       result= session.read_transaction(self._get_by_username, username)
       if result:
         if "Client" in result['p'].labels:
-          return User(username= result['p']['username'], password= result['p']['password'], email= result['p']['email'], full_name= result['p']['full_name'], rol= User_rol.client)
+          return User(id= result['p'].id, username= result['p']['username'], password= result['p']['password'], email= result['p']['email'], full_name= result['p']['full_name'], rol= User_rol.client)
         if "Vendor" in result['p'].labels:
-          return User(username= result['p']['username'], password= result['p']['password'], email= result['p']['email'], full_name= result['p']['full_name'], rol= User_rol.vendor)
+          return User(id= result['p'].id, username= result['p']['username'], password= result['p']['password'], email= result['p']['email'], full_name= result['p']['full_name'], rol= User_rol.vendor)
       return result
 
   def _get_by_email(self, tx, email):
@@ -57,7 +57,7 @@ class Neo4j:
     with self.driver.session() as session:
       if(self.get_by_username(username= username) == None and self.get_by_email(email= email) == None):
         result= session.write_transaction(self._create_client, username, password, email, full_name)
-        return User(username= result['c']['username'], password= result['c']['password'], email= result['c']['email'], full_name= result['c']['full_name'], rol= User_rol.client)
+        return User(id= result['c'].id, username= result['c']['username'], password= result['c']['password'], email= result['c']['email'], full_name= result['c']['full_name'], rol= User_rol.client)
       return False
   
   def _create_vendor(self, tx, username, password, email, full_name):
@@ -72,7 +72,7 @@ class Neo4j:
     with self.driver.session() as session:
       if(self.get_by_username(username= username) == None and self.get_by_email(email= email) == None):
         result= session.write_transaction(self._create_vendor, username, password, email, full_name)
-        return User(username= result['v']['username'], password= result['v']['password'], email= result['v']['email'], full_name= result['v']['full_name'], rol= User_rol.vendor)
+        return User(id= result['v'].id, username= result['v']['username'], password= result['v']['password'], email= result['v']['email'], full_name= result['v']['full_name'], rol= User_rol.vendor)
       return False
 
 async def get_neo4j():

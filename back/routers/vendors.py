@@ -1,7 +1,11 @@
+from decimal import Decimal
 from fastapi import APIRouter, Depends, Form, status, HTTPException
 from pydantic import EmailStr
+
 from ..db.neo4j import Neo4j, get_neo4j
+from ..db.mongo import Mongo_db, get_mongo
 from ..security import security
+from ..db.models import Product, User_rol
 
 router= APIRouter(
   prefix= "/vendors"
@@ -13,3 +17,39 @@ async def create(neo4j_ins : Neo4j = Depends(get_neo4j), username: str = Form(mi
   if not r:
     raise HTTPException(status_code= status.HTTP_200_OK, detail= f'The username: {username} or email {email} already exists')
   return r
+
+@router.post("/{username}/products", status_code= status.HTTP_201_CREATED)
+async def create_product(username: str, neo4j: Neo4j = Depends(get_neo4j), mongo: Mongo_db= Depends(get_mongo), title: str = Form(min_length= 5), category: str = Form(), price: Decimal= Form(gt= 0), description: str = Form()):
+  vendor= neo4j.get_by_username(username= username)
+  if not vendor:
+    raise HTTPException(status_code= status.HTTP_200_OK, detail= f"The username: {username} do not exists!")
+  if vendor.rol != User_rol.vendor:
+    raise HTTPException(status_code= status.HTTP_401_UNAUTHORIZED, detail= f'The user {username} is not a Vendor')
+  product= Product(vendor= vendor.id, title= title, category= category, price= price, description= description)
+  product= mongo.create_product(product)
+  if not product:
+    raise HTTPException(status_code= status.HTTP_200_OK, detail= f"The product {title} already exists!")
+  return product
+
+@router.get("/{username}/products")
+async def get_products(username: str, neo4j: Neo4j = Depends(get_neo4j), mongo: Mongo_db= Depends(get_mongo)):
+  vendor= neo4j.get_by_username(username)
+  if not vendor:
+    raise HTTPException(status_code= status.HTTP_200_OK, detail= f"The username: {username} do not exists!")
+  if vendor.rol != User_rol.vendor:
+    raise HTTPException(status_code= status.HTTP_401_UNAUTHORIZED, detail= f'The user {username} is not a Vendor')
+  products= mongo.get_products(vendor.id)
+  return products
+  
+@router.put("/{username}/products", status_code= status.HTTP_202_ACCEPTED)
+async def create_product(username: str, neo4j: Neo4j = Depends(get_neo4j), mongo: Mongo_db= Depends(get_mongo), id: str = Form(), title: str = Form(min_length= 5), category: str = Form(), price: Decimal= Form(gt= 0), description: str = Form()):
+  vendor= neo4j.get_by_username(username= username)
+  if not vendor:
+    raise HTTPException(status_code= status.HTTP_200_OK, detail= f"The username: {username} do not exists!")
+  if vendor.rol != User_rol.vendor:
+    raise HTTPException(status_code= status.HTTP_401_UNAUTHORIZED, detail= f'The user {username} is not a Vendor')
+  product= Product(id= id,vendor= vendor.id, title= title, category= category, price= price, description= description)
+  product= mongo.update_product(product)
+  if not product:
+    raise HTTPException(status_code= status.HTTP_200_OK, detail= f"The product {title} already exists!")
+  return product

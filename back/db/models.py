@@ -1,6 +1,9 @@
 import decimal
 from enum import Enum
+from typing import Union
+from bson import ObjectId
 from pydantic import BaseModel, EmailStr
+from bson.decimal128 import Decimal128
 
 class Token(BaseModel):
   access_token: str
@@ -11,6 +14,7 @@ class User_rol(Enum):
   vendor= "vendor"
 
 class User(BaseModel):
+  id: Union[int, None]
   username: str
   password: str
   email: EmailStr
@@ -18,11 +22,19 @@ class User(BaseModel):
   rol: User_rol
 
 class Product(BaseModel):
-  vendor: User
-  name: str
+  id: Union[str, None]
+  vendor: int
+  title: str
   category: str
   price: decimal.Decimal
   description: str
+
+  def convert_to_mongo(self) -> dict:
+    p= self.dict()
+    p['price']= Decimal128(str(self.price))
+    p['_id']= ObjectId(p.get('id'))
+    p.pop('id')
+    return p
 
 class Variant(BaseModel):
   product: Product
