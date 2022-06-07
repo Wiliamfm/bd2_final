@@ -51,5 +51,17 @@ async def create_product(username: str, neo4j: Neo4j = Depends(get_neo4j), mongo
   product= Product(id= id,vendor= vendor.id, title= title, category= category, price= price, description= description)
   product= mongo.update_product(product)
   if not product:
-    raise HTTPException(status_code= status.HTTP_200_OK, detail= f"The product {title} already exists!")
+    raise HTTPException(status_code= status.HTTP_200_OK, detail= f"The product {title} already exists! or you do not have the right permissions")
+  return product
+
+@router.delete("/{username}/products", status_code= status.HTTP_202_ACCEPTED)
+async def delete_product(username: str, neo4j: Neo4j = Depends(get_neo4j), mongo: Mongo_db = Depends(get_mongo), id: str = Form()):
+  vendor= neo4j.get_by_username(username)
+  if not vendor:
+    raise HTTPException(status_code= status.HTTP_200_OK, detail= f"The username: {username} do not exists!")
+  if vendor.rol != User_rol.vendor:
+    raise HTTPException(status_code= status.HTTP_401_UNAUTHORIZED, detail= f'The user {username} is not a Vendor')
+  product= mongo.delete_product(id, vendor)
+  if not product:
+    raise HTTPException(status_code= status.HTTP_200_OK, detail= f"The product was not delete")
   return product

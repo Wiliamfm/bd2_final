@@ -1,6 +1,7 @@
 from decimal import Decimal
 from pymongo import MongoClient
-from .models import Product
+
+from .models import Product, User
 from bson.objectid import ObjectId
 
 URL= "mongodb://mongo:1234@localhost:27017"
@@ -38,8 +39,18 @@ class Mongo_db():
     p= self.convert_to_model(self.collection.find_one({'_id': product.convert_to_mongo().get('_id')}))
     if p.title != product.title and self.get_product_by_title(product.title):
       return False
+    if p.vendor != product.vendor:
+      return False
     if self.collection.replace_one(filter= {'_id': ObjectId(product.id)}, replacement= product.convert_to_mongo()).raw_result.get('updatedExisting'):
       return self.convert_to_model(self.collection.find_one({'_id': ObjectId(product.id)}))
+
+  def delete_product(self, id: str, vendor: User) -> Product:
+    p= self.collection.find_one({'_id': ObjectId(id)})
+    if not p or p.get('vendor') != vendor.id:
+      return False
+    if self.collection.delete_one({'_id': p.get('_id')}).raw_result.get('ok') != 1:
+      return False
+    return self.convert_to_model(p)
 
 async def get_mongo():
   mongo_ins= Mongo_db(url= URL) 
