@@ -6,6 +6,6 @@ router= APIRouter(
   prefix= "/products"
 )
 
-@router.post("/", status_code= status.HTTP_201_CREATED)
-async def create(mongo: Mongo_db = Depends(get_mongo)):
-  pass
+@router.get("/")
+async def get_all(mongo: Mongo_db = Depends(get_mongo)):
+  return mongo.get_all_products()

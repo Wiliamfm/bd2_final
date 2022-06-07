@@ -5,7 +5,7 @@ from pydantic import EmailStr
 from ..db.neo4j import Neo4j, get_neo4j
 from ..db.mongo import Mongo_db, get_mongo
 from ..security import security
-from ..db.models import Product, User_rol
+from ..db.models import Product, User_rol, Variant
 
 router= APIRouter(
   prefix= "/vendors"
@@ -65,3 +65,21 @@ async def delete_product(username: str, neo4j: Neo4j = Depends(get_neo4j), mongo
   if not product:
     raise HTTPException(status_code= status.HTTP_200_OK, detail= f"The product was not delete")
   return product
+
+@router.post("/{username}/products/{product_id}", status_code= status.HTTP_201_CREATED)
+async def create_variant(username: str, product_id: str, neo4j: Neo4j = Depends(get_neo4j), mongo: Mongo_db = Depends(get_mongo), name: str = Form(min_length= 5), quantity: int = Form(gt= 0), description: str = Form()):
+  vendor= neo4j.get_by_username(username)
+  product= mongo.get_product_by_id(product_id)
+  if not vendor:
+    raise HTTPException(status_code= status.HTTP_200_OK, detail= f"The username: {username} do not exists!")
+  if vendor.rol != User_rol.vendor:
+    raise HTTPException(status_code= status.HTTP_401_UNAUTHORIZED, detail= f'The user {username} is not a Vendor')
+  if not product:
+    raise HTTPException(status_code= status.HTTP_200_OK, detail= f"The product {product_id} do not exists!")
+  if product.vendor != vendor.id:
+    raise HTTPException(status_code= status.HTTP_401_UNAUTHORIZED, detail= f'The vendor {vendor.username} do not own the product {product.title}')
+  variant= Variant(product= product.id, name= name, quantity= quantity, description= description)
+  variant= mongo.create_variant(variant)
+  if not variant:
+    raise HTTPException(status_code= status.HTTP_200_OK, detail= f"The variant {name} already exists!")
+  return variant

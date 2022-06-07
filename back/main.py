@@ -3,7 +3,7 @@ from fastapi import Depends, FastAPI, status, HTTPException
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 from .db.models import Token
-from .routers import users, vendors
+from .routers import users, vendors, products
 from .db.neo4j import Neo4j, get_neo4j
 from .security import security
 
@@ -13,6 +13,7 @@ oatuh2_scheme= OAuth2PasswordBearer(tokenUrl='login')
 
 app.include_router(users.router)
 app.include_router(vendors.router)
+app.include_router(products.router)
 
 @app.post("/login", status_code= status.HTTP_202_ACCEPTED)
 async def login(neo4j_ins: Neo4j = Depends(get_neo4j), form_data : OAuth2PasswordRequestForm = Depends()):

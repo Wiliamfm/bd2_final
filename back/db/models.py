@@ -37,8 +37,16 @@ class Product(BaseModel):
     return p
 
 class Variant(BaseModel):
-  product: Product
+  id: Union[None, str]
+  product: str
   name: str
   quantity: int
-  path_photos: list[str]
+  path_photos: Union[None, list[str]]
   description: str
+
+  def convert_to_mongo(self) -> dict:
+    v= self.dict()
+    v['_id']= ObjectId(v.get('id'))
+    v.pop('id')
+    v['product']= ObjectId(v.get('product'))
+    return v

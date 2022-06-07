@@ -1,7 +1,8 @@
+from typing import Union
 from decimal import Decimal
 from pymongo import MongoClient
 
-from .models import Product, User
+from .models import Product, User, Variant
 from bson.objectid import ObjectId
 
 URL= "mongodb://mongo:1234@localhost:27017"
@@ -11,6 +12,7 @@ class Mongo_db():
     self.client= MongoClient(url)
     self.db= self.client['commerce']
     self.collection= self.db['products']
+    self.variants_collection= self.db['variants']
 
   def close(self):
     self.client.close()
@@ -20,9 +22,20 @@ class Mongo_db():
     mongo_p.pop('_id')
     mongo_p['price']= Decimal(str(mongo_p.get('price')))
     return Product(**mongo_p)
+
+  def convert_to_variant(self, mongo_v: dict) -> Variant:
+    mongo_v['id']= str(mongo_v.get('_id'))
+    mongo_v.pop('_id')
+    mongo_v['product']= str(mongo_v.get('product'))
+    return Variant(**mongo_v)
   
-  def get_product_by_title(self, title: str):
-    return self.collection.find_one({'title': title})
+  def get_product_by_title(self, title: str) -> Product:
+    return self.convert_to_model(self.collection.find_one({'title': title}))
+  
+  def get_product_by_id(self, id: str) -> Union[None, Product]:
+    p= self.collection.find_one({'_id': ObjectId(id)})
+    if p:
+      return self.convert_to_model(p)
 
   def create_product(self, product: Product) -> Product:
     if self.get_product_by_title(product.title):
@@ -51,6 +64,24 @@ class Mongo_db():
     if self.collection.delete_one({'_id': p.get('_id')}).raw_result.get('ok') != 1:
       return False
     return self.convert_to_model(p)
+
+  def get_all_products(self) -> list[Product]:
+    return [self.convert_to_model(p) for p in self.collection.find()]
+
+  def get_variant_by_id(self, id: str) -> Union[None, Variant]:
+    return self.convert_to_variant(self.variants_collection.find_one({'_id': id}))
+
+  def get_variant_by_name(self, product_id: str, name: str) -> Union[None, Variant]:
+    vs= self.variants_collection.find({'product': ObjectId(product_id)})
+    for v in vs:
+      if v.get('name') == name:
+        return self.convert_to_variant(v)
+
+  def create_variant(self, variant: Variant) -> Variant:
+    if self.get_variant_by_name(variant.product, variant.name):
+      return False
+    v_id= self.variants_collection.insert_one(variant.convert_to_mongo()).inserted_id
+    return self.get_variant_by_id(v_id)
 
 async def get_mongo():
   mongo_ins= Mongo_db(url= URL) 
