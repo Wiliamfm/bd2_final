@@ -1,6 +1,6 @@
 from decimal import Decimal
 from peewee import *
-from .models import Bill as Bill_model, Bill_detail as Bill_detail_model 
+from .models import Bill as Bill_model, Bill_detail as Bill_detail_model, Variant 
 
 db= PostgresqlDatabase(database= 'commerce', host='localhost', port="5432", user="postgres", password="1234")
 
@@ -41,12 +41,20 @@ class Postgres():
     try:
       b= Bill(client= bill.client, total_price= bill.total_price, address= bill.address)
       b.save()
-      return True
-    except:
+      bill.id= b.get_id()
+      return bill
+    except Exception as e:
+      print(e)
       return False
 
   def create_bill_detail(self, bill_detail: Bill_detail_model) -> Bill_detail_model:
-    pass
+    try:
+      bd= Bill_detail(bill= bill_detail.bill, variant= bill_detail.variant, quantity= bill_detail.quantity, unit_price= bill_detail.unit_price, price= bill_detail.price)
+      bd.save()
+      return True
+    except Exception as e:
+      print(e)
+      return False
 
 def get_postgres() -> Postgres:
   postgres= Postgres(db)

@@ -40,7 +40,20 @@ async def buy_product(items: Items, neo4j: Neo4j = Depends(get_neo4j), mongo: Mo
         pass #Variant not associated to a product
     else:
       pass #Variant not found or has a greather qty
-  bill= Bill(client= user.id, address= "", total_price= total_price)
-  if not postgres.create_bill(bill):
+  bill= postgres.create_bill(Bill(client= user.id, address= "", total_price= total_price))
+  if len(bills) > 0 and not bill:
     raise HTTPException(status_code= status.HTTP_500_INTERNAL_SERVER_ERROR, detail= f"The bill could not be create :c")
-  return variants
+  for i in range(len(bills)):
+    bill_d= bills[i]
+    bill_d.bill= bill.id
+    if postgres.create_bill_detail(bill_d):
+      v= variants[i]
+      v.quantity= v.quantity - bill_d.quantity
+      if mongo.update_variant(v):
+        pass
+      else:
+        print(v, "was not updated")
+        pass #Could not update variant's quantity
+    else:
+      pass #Error saving bills detail
+  return bills

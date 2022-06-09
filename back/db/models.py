@@ -70,6 +70,6 @@ class Bill_detail(BaseModel):
   bill: Union[None, int]
   vendor: int
   variant: str
-  quantity: str
+  quantity: int
   unit_price: decimal.Decimal
   price: decimal.Decimal

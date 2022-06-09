@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
+from fastapi import HTTPException, status
 from passlib.context import CryptContext
-from jose import jwt
+from jose import ExpiredSignatureError, jwt
 from fastapi.security import OAuth2PasswordBearer
 
 
@@ -25,5 +26,8 @@ def create_token(data: dict, expires_delta: timedelta):
   return encoded_jwt
 
 def decode_token(token: str):
-  payload= jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-  return payload.get('sub')
+  try:
+    payload= jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    return payload.get('sub')
+  except ExpiredSignatureError:
+    raise HTTPException(status_code= status.HTTP_401_UNAUTHORIZED, detail= "The token has expired")

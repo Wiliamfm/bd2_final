@@ -103,9 +103,11 @@ class Mongo_db():
     v= self.variants_collection.find_one({'_id': ObjectId(variant.id)})
     if v and v.get('name') != variant.name and self.get_variant_by_name(product_id= variant.product, name= variant.name):
       return False
-    if v.get('products') != variant.product:
+    if v.get('product') != ObjectId(variant.product):
+      print(variant.convert_to_mongo())
       return False
     if self.variants_collection.replace_one(filter= {'_id': ObjectId(variant.id)}, replacement= variant.convert_to_mongo()).raw_result.get('updatedExisting'):
+      print(self.variants_collection.find_one({'_id': ObjectId(variant.id)}))
       return self.convert_to_variant(self.variants_collection.find_one({'_id': ObjectId(variant.id)}))
 
 async def get_mongo():
