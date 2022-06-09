@@ -258,7 +258,7 @@
 							]
 						},
 						"url": {
-							"raw": "http://localhost:8000/vendors/username1/products/62a21c767da8260fc596e22e",
+							"raw": "http://localhost:8000/vendors/username1/products/62a2427c5b37e329f231f756",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -268,7 +268,7 @@
 								"vendors",
 								"username1",
 								"products",
-								"62a21c767da8260fc596e22e"
+								"62a2427c5b37e329f231f756"
 							]
 						}
 					},
@@ -304,7 +304,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:8000/products/62a21c767da8260fc596e22e",
+							"raw": "http://localhost:8000/products/62a2427c5b37e329f231f756",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -312,7 +312,7 @@
 							"port": "8000",
 							"path": [
 								"products",
-								"62a21c767da8260fc596e22e"
+								"62a2427c5b37e329f231f756"
 							]
 						}
 					},
@@ -330,6 +330,11 @@
 							"type": "oauth2",
 							"oauth2": [
 								{
+									"key": "tokenName",
+									"value": "",
+									"type": "string"
+								},
+								{
 									"key": "addTokenTo",
 									"value": "header",
 									"type": "string"
@@ -340,7 +345,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"items\": [\n    {\n      \"variant_id\": \"62a2221dba3c9340e6045a48\",\n      \"quantity\": 3\n    },\n    {\n      \"variant_id\": \"62a22214ba3c9340e6045a45\",\n      \"quantity\": 1\n    }\n  ]\n}",
+							"raw": "{\n  \"items\": [\n    {\n      \"variant_id\": \"62a242995b37e329f231f75a\",\n      \"quantity\": 3\n    },\n    {\n      \"variant_id\": \"62a242945b37e329f231f758\",\n      \"quantity\": 1\n    }\n  ]\n}",
 							"options": {
 								"raw": {
 									"language": "json"
