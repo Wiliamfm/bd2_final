@@ -19,8 +19,8 @@ async def create(neo4j_ins : Neo4j = Depends(get_neo4j), username: str = Form(mi
   return r
 
 @router.post("/{username}/products", status_code= status.HTTP_201_CREATED)
-async def create_product(username: str, neo4j: Neo4j = Depends(get_neo4j), mongo: Mongo_db= Depends(get_mongo), title: str = Form(min_length= 5), category: str = Form(), price: Decimal= Form(gt= 0), description: str = Form()):
-  vendor= neo4j.get_by_username(username= username)
+async def create_product(username: str, neo4j: Neo4j = Depends(get_neo4j), mongo: Mongo_db= Depends(get_mongo), title: str = Form(min_length= 5), category: str = Form(), price: Decimal= Form(gt= 0), description: str = Form(), token: str = Depends(security.oatuh2_scheme)):
+  vendor= neo4j.get_by_username(security.decode_token(token))
   if not vendor:
     raise HTTPException(status_code= status.HTTP_200_OK, detail= f"The username: {username} do not exists!")
   if vendor.rol != User_rol.vendor:
@@ -32,8 +32,8 @@ async def create_product(username: str, neo4j: Neo4j = Depends(get_neo4j), mongo
   return product
 
 @router.get("/{username}/products")
-async def get_products(username: str, neo4j: Neo4j = Depends(get_neo4j), mongo: Mongo_db= Depends(get_mongo)):
-  vendor= neo4j.get_by_username(username)
+async def get_products(username: str, neo4j: Neo4j = Depends(get_neo4j), mongo: Mongo_db= Depends(get_mongo), token: str = Depends(security.oatuh2_scheme)):
+  vendor= neo4j.get_by_username(security.decode_token(token))
   if not vendor:
     raise HTTPException(status_code= status.HTTP_200_OK, detail= f"The username: {username} do not exists!")
   if vendor.rol != User_rol.vendor:
@@ -42,8 +42,8 @@ async def get_products(username: str, neo4j: Neo4j = Depends(get_neo4j), mongo: 
   return products
   
 @router.put("/{username}/products", status_code= status.HTTP_202_ACCEPTED)
-async def create_product(username: str, neo4j: Neo4j = Depends(get_neo4j), mongo: Mongo_db= Depends(get_mongo), id: str = Form(), title: str = Form(min_length= 5), category: str = Form(), price: Decimal= Form(gt= 0), description: str = Form()):
-  vendor= neo4j.get_by_username(username= username)
+async def create_product(username: str, neo4j: Neo4j = Depends(get_neo4j), mongo: Mongo_db= Depends(get_mongo), id: str = Form(), title: str = Form(min_length= 5), category: str = Form(), price: Decimal= Form(gt= 0), description: str = Form(), token: str = Depends(security.oatuh2_scheme)):
+  vendor= neo4j.get_by_username(security.decode_token(token))
   if not vendor:
     raise HTTPException(status_code= status.HTTP_200_OK, detail= f"The username: {username} do not exists!")
   if vendor.rol != User_rol.vendor:
@@ -55,8 +55,8 @@ async def create_product(username: str, neo4j: Neo4j = Depends(get_neo4j), mongo
   return product
 
 @router.delete("/{username}/products", status_code= status.HTTP_202_ACCEPTED)
-async def delete_product(username: str, neo4j: Neo4j = Depends(get_neo4j), mongo: Mongo_db = Depends(get_mongo), id: str = Form()):
-  vendor= neo4j.get_by_username(username)
+async def delete_product(username: str, neo4j: Neo4j = Depends(get_neo4j), mongo: Mongo_db = Depends(get_mongo), id: str = Form(), token: str = Depends(security.oatuh2_scheme)):
+  vendor= neo4j.get_by_username(security.decode_token(token))
   if not vendor:
     raise HTTPException(status_code= status.HTTP_200_OK, detail= f"The username: {username} do not exists!")
   if vendor.rol != User_rol.vendor:
@@ -67,8 +67,8 @@ async def delete_product(username: str, neo4j: Neo4j = Depends(get_neo4j), mongo
   return product
 
 @router.post("/{username}/products/{product_id}", status_code= status.HTTP_201_CREATED)
-async def create_variant(username: str, product_id: str, neo4j: Neo4j = Depends(get_neo4j), mongo: Mongo_db = Depends(get_mongo), name: str = Form(min_length= 5), quantity: int = Form(gt= 0), description: str = Form()):
-  vendor= neo4j.get_by_username(username)
+async def create_variant(username: str, product_id: str, neo4j: Neo4j = Depends(get_neo4j), mongo: Mongo_db = Depends(get_mongo), name: str = Form(min_length= 5), quantity: int = Form(gt= 0), description: str = Form(), token: str = Depends(security.oatuh2_scheme)):
+  vendor= neo4j.get_by_username(security.decode_token(token))
   product= mongo.get_product_by_id(product_id)
   if not vendor:
     raise HTTPException(status_code= status.HTTP_200_OK, detail= f"The username: {username} do not exists!")

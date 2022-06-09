@@ -30,12 +30,26 @@ class Mongo_db():
     return Variant(**mongo_v)
   
   def get_product_by_title(self, title: str) -> Product:
-    return self.convert_to_model(self.collection.find_one({'title': title}))
+    p= self.collection.find_one({'title': title})
+    if p:
+      return self.convert_to_model(p)
   
   def get_product_by_id(self, id: str) -> Union[None, Product]:
     p= self.collection.find_one({'_id': ObjectId(id)})
     if p:
       return self.convert_to_model(p)
+
+  def get_product_by_id_2(self, id: str) -> Union[None, Product]:
+    p= self.collection.find_one({'_id': ObjectId(id)})
+    vs= self.variants_collection.find({'product': ObjectId(id)})
+    if p:
+      if vs:
+        variants: list[Variant]= []
+        for v in vs:
+          variants.append(self.convert_to_variant(v))
+        product= self.convert_to_model(p)
+        product.variants= variants
+      return product
 
   def create_product(self, product: Product) -> Product:
     if self.get_product_by_title(product.title):
@@ -69,7 +83,9 @@ class Mongo_db():
     return [self.convert_to_model(p) for p in self.collection.find()]
 
   def get_variant_by_id(self, id: str) -> Union[None, Variant]:
-    return self.convert_to_variant(self.variants_collection.find_one({'_id': id}))
+    v= self.variants_collection.find_one({'_id': ObjectId(id)})
+    if v:
+      return self.convert_to_variant(v)
 
   def get_variant_by_name(self, product_id: str, name: str) -> Union[None, Variant]:
     vs= self.variants_collection.find({'product': ObjectId(product_id)})
@@ -82,6 +98,15 @@ class Mongo_db():
       return False
     v_id= self.variants_collection.insert_one(variant.convert_to_mongo()).inserted_id
     return self.get_variant_by_id(v_id)
+
+  def update_variant(self, variant: Variant) -> Variant:
+    v= self.variants_collection.find_one({'_id': ObjectId(variant.id)})
+    if v and v.get('name') != variant.name and self.get_variant_by_name(product_id= variant.product, name= variant.name):
+      return False
+    if v.get('products') != variant.product:
+      return False
+    if self.variants_collection.replace_one(filter= {'_id': ObjectId(variant.id)}, replacement= variant.convert_to_mongo()).raw_result.get('updatedExisting'):
+      return self.convert_to_variant(self.variants_collection.find_one({'_id': ObjectId(variant.id)}))
 
 async def get_mongo():
   mongo_ins= Mongo_db(url= URL) 
